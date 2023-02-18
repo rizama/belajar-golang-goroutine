@@ -180,6 +180,8 @@ func TestRaceCondition(t *testing.T) {
 	fmt.Println("Nilai Akhir", x)
 }
 
+// Mutex adalah cara untuk membuat sebuah kode hanya dieksekusi oleh 1 proses saja
+// sehingga ketika sedang dieksekusi, proses lain tidak bisa meng-eksekusi kode tersebut
 func TestMutex(t *testing.T) {
 	x := 0
 	var mutex sync.Mutex
@@ -190,7 +192,6 @@ func TestMutex(t *testing.T) {
 				// mengunci proses dibawah agar tidak diproses oleh goroutine lain
 				mutex.Lock()
 				x = x + 1
-				fmt.Println("sdsds")
 				// seteleh beres proses diatas, maka mutex harus di unlock, agar goroutine lain bisa memproses lagi
 				mutex.Unlock()
 			}
@@ -200,3 +201,42 @@ func TestMutex(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	fmt.Println("Nilai Akhir", x)
 }
+
+type BankAccount struct {
+	RWMutex sync.RWMutex
+	Balance int
+}
+
+func (account *BankAccount) AddBalance(amount int) {
+	account.RWMutex.Lock()
+	account.Balance = account.Balance + amount
+	account.RWMutex.Unlock()
+}
+
+func (account *BankAccount) GetBalance() int {
+	account.RWMutex.RLock()
+	balance := account.Balance
+	account.RWMutex.RUnlock()
+	return balance
+}
+
+func TestRWMutex(t *testing.T) {
+	account := BankAccount{}
+
+	// looping ini menjalankan proses (AddBalance, GetBalance) secara goroutine (asynchronous)
+	// artinya proses tersebut dikerjakan oleh beberapa goroutine secara bersamaan
+	// didalam AddBalance dan GetBalance sudah dipasang Mutex agar tidak terjadi Race condition
+	for i := 0; i < 100; i++ {
+		go func() {
+			for j := 0; j < 100; j++ {
+				account.AddBalance(1)
+				fmt.Println(account.GetBalance())
+			}
+		}()
+	}
+
+	time.Sleep(5 * time.Second)
+	fmt.Println("Total Balance:", account.GetBalance())
+}
+
+// Note: penggunakan Mutex itu disarankan ketika sebuah proses/struct dll di akses oleh beberapa goroutine sekaligus, agar tidak terjadi race condition

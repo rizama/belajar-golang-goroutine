@@ -68,3 +68,37 @@ func TestChannelAsParameterWithInOut(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 }
+
+func TestBufferedChannel(t *testing.T) {
+
+	// membuat channel menggunakan buffer, seakan2 memasukan data ke buffer
+	// 3 disini adalah kuota dari buffer, sehingga channel tersebut tidak akan menunggu consumer untuk menerima data dari pengirim selanjutnya
+	// buffer seperti antrian
+	channel := make(chan string, 3)
+	defer close(channel)
+
+	// channel <- "Rizky"
+	// channel <- "Sam"
+	// channel <- "Pratama"
+
+	// baca channel pertama, pembacaan data sesuai urutan
+	// fmt.Println(<-channel)
+	// fmt.Println(<-channel)
+	// fmt.Println(<-channel)
+
+	// Use go routine
+	go func() {
+		channel <- "Rizky"
+		channel <- "Sam"
+		channel <- "Pratama"
+	}()
+
+	go func() {
+		fmt.Println(<-channel)
+		fmt.Println(<-channel)
+		fmt.Println(<-channel)
+	}()
+
+	time.Sleep(2 * time.Second)
+	fmt.Println("Selesai")
+}

@@ -3,6 +3,7 @@ package belajar_golang_goroutines
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -171,6 +172,27 @@ func TestRaceCondition(t *testing.T) {
 		go func() {
 			for j := 0; j < 100; j++ {
 				x = x + 1
+			}
+		}()
+	}
+
+	time.Sleep(5 * time.Second)
+	fmt.Println("Nilai Akhir", x)
+}
+
+func TestMutex(t *testing.T) {
+	x := 0
+	var mutex sync.Mutex
+
+	for i := 0; i < 1000; i++ {
+		go func() {
+			for j := 0; j < 100; j++ {
+				// mengunci proses dibawah agar tidak diproses oleh goroutine lain
+				mutex.Lock()
+				x = x + 1
+				fmt.Println("sdsds")
+				// seteleh beres proses diatas, maka mutex harus di unlock, agar goroutine lain bisa memproses lagi
+				mutex.Unlock()
 			}
 		}()
 	}
